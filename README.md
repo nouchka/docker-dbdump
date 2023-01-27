@@ -21,3 +21,7 @@ Variables:
 +   generate/push dump flag or registry path as flag
 +   import_always
 +   import_check flag or request to check
+
+Links:
++   https://hub.docker.com/r/linuxserver/mariadb/
++   https://github.com/linuxserver/docker-mods/tree/universal-docker-in-docker
