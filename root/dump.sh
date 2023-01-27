@@ -1,6 +1,10 @@
 #!/bin/sh
 
-sleep 20
+##TODO need move this to s6, oneshot, wait for dind mod
+
+##TODO if ls /data/dump.sql.gz && !$DOCKER_IMAGE
+## as root ALTER USER $MYSQL_USER@$MYSQL_HOST ACCOUNT LOCK;
+## import mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE
 ls -al /data/
 echo "Mysql dump"
 mysqldump -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
@@ -12,3 +16,5 @@ docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE .
 echo docker push $DOCKER_REGISTRY/$DOCKER_IMAGE
 docker push $DOCKER_REGISTRY/$DOCKER_IMAGE
 docker rmi $DOCKER_REGISTRY/$DOCKER_IMAGE
+docker image ls
+docker run --rm --entrypoint ls $DOCKER_REGISTRY/$DOCKER_IMAGE -al /data/

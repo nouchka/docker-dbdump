@@ -22,6 +22,7 @@ services:
   backup:
     image: nouchka/dbdump
     build: .
+    privileged: true
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_HOST=db
@@ -31,12 +32,10 @@ services:
       - TZ=Europe/Paris
       - DOCKER_REGISTRY=registry:5000
       - DOCKER_IMAGE=dump
-##      - DOCKER_MODS=linuxserver/mods:universal-docker-in-docker
 ##      - DOCKER_USERNAME=
 ##      - DOCKER_PASSWORD=
     volumes:
       - ./test/docker/daemon.json:/etc/docker/daemon.json:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   database:
