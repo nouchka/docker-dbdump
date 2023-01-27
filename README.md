@@ -1,4 +1,8 @@
 # docker-dbdump
+[![Docker pull](https://img.shields.io/docker/pulls/nouchka/dbdump)](https://hub.docker.com/r/nouchka/dbdump/)
+[![Docker stars](https://img.shields.io/docker/stars/nouchka/dbdump)](https://hub.docker.com/r/nouchka/dbdump/)
+[![Build Status](https://gitlab.com/japromis/docker-dbdump/badges/master/pipeline.svg)](https://gitlab.com/japromis/docker-dbdump/pipelines)
+[![Docker size](https://img.shields.io/docker/image-size/nouchka/dbdump/latest)](https://hub.docker.com/r/nouchka/dbdump/)
 
 
 
