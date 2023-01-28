@@ -32,8 +32,8 @@ services:
       - TZ=Europe/Paris
       - DOCKER_REGISTRY=registry:5000
       - DOCKER_IMAGE=dump
-##      - DOCKER_USERNAME=
-##      - DOCKER_PASSWORD=
+      - DOCKER_USERNAME=test
+      - DOCKER_PASSWORD=test
     volumes:
       - ./test/docker/daemon.json:/etc/docker/daemon.json:ro
 

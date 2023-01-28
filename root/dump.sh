@@ -12,7 +12,7 @@ ls -al /root/build/data/
 cd /root/build
 echo "Docker build"
 docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE .
-##echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
+echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin || true
 echo docker push $DOCKER_REGISTRY/$DOCKER_IMAGE
 docker push $DOCKER_REGISTRY/$DOCKER_IMAGE
 docker rmi $DOCKER_REGISTRY/$DOCKER_IMAGE
