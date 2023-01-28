@@ -1,7 +1,16 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
-if [[ ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE ]] ; then
+if [[ "$DATABASE_INIT" == "1" && -f "/data/dump.sql.gz" ]] ; then
+	echo "Mysql lock"
+	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT LOCK;" || true
+
+	echo "Mysql import"
+	zcat /data/dump.sql.gz |mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE
+
+	echo "Mysql unlock"
+	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT UNLOCK;" || true
+elif [[ ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE ]] ; then
 	echo "Mysql dump"
 	mysqldump -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
 
@@ -16,15 +25,6 @@ if [[ ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE ]] ; then
 
 	echo "Docker clean"
 	docker rmi $DOCKER_REGISTRY/$DOCKER_IMAGE
-elif [[ "$DATABASE_INIT" == "1" && -f "/data/dump.sql.gz" ]] ; then
-	echo "Mysql lock"
-	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT LOCK;" || true
-
-	echo "Mysql import"
-	zcat /data/dump.sql.gz |mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE
-
-	echo "Mysql unlock"
-	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT UNLOCK;" || true
 fi
 
 echo "Halting"
