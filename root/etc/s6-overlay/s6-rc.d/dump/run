@@ -10,7 +10,7 @@ if [[ "$DATABASE_INIT" == "1" && -f "/data/dump.sql.gz" ]] ; then
 
 	echo "Mysql unlock"
 	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT UNLOCK;" || true
-elif [[ ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE ]] ; then
+elif [[ ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE && ! -z $DOCKER_USERNAME && ! -z $DOCKER_PASSWORD ]] ; then
 	echo "Mysql dump"
 	mysqldump -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
 
