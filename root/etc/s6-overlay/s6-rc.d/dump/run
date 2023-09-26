@@ -1,24 +1,61 @@
 #!/usr/bin/with-contenv bash
 # shellcheck shell=bash
 
+if [[ -z $MYSQL_DATABASE ]] ; then
+	echo "No database>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+	/run/s6/basedir/bin/halt
+	exit 1
+fi
+
+if [[ ! -z $MYSQL_USER && ! -z $MYSQL_PASSWORD ]] ; then
+	echo "check credentials MYSQL_USER MYSQL_PASSWORD>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+	if ! mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -e 'quit' &> /dev/null; then
+		echo "Fail to connect with MYSQL_USER>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+		if ! mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e 'quit' &> /dev/null; then
+			echo "Fail to connect with MYSQL_ROOT_PASSWORD>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+			/run/s6/basedir/bin/halt
+			exit 1
+		else
+			echo "Create USER MYSQL_USER>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+			mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';";
+			mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "CREATE DATABASE $MYSQL_DATABASE;";
+			mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';";
+		fi
+	fi
+elif [[ ! -z $MYSQL_ROOT_PASSWORD ]] ; then
+	MYSQL_USER=root
+	MYSQL_PASSWORD=MYSQL_ROOT_PASSWORD
+else
+	echo "No credentials>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+	/run/s6/basedir/bin/halt
+	exit 1
+fi
+
+if ! mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE -e 'quit' &> /dev/null; then
+	echo "No credentials valid>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+	/run/s6/basedir/bin/halt
+	exit 1
+fi
+
 if [[ "$DATABASE_INIT" == "1" && -f "/data/dump.sql.gz" ]] ; then
 	echo "Mysql lock"
-	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT LOCK;" || true
+	mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT LOCK;"
 
 	echo "Mysql import"
-	zcat /data/dump.sql.gz |mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE
+	zcat /data/dump.sql.gz |mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE
 
 	echo "Mysql unlock"
-	mysql -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT UNLOCK;" || true
-elif [[ ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE && ! -z $DOCKER_USERNAME && ! -z $DOCKER_PASSWORD ]] ; then
+	mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT UNLOCK;"
+
+elif [[ "$DATABASE_BACKUP" == "1" && ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE && ! -z $DOCKER_USERNAME && ! -z $DOCKER_PASSWORD ]] ; then
+	echo "Docker login"
+	echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
+
 	echo "Mysql dump"
-	mysqldump -uroot -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
+	mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
 
 	echo "Docker build"
 	cd /root/build && docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE .
-
-	echo "Docker login"
-	echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin || true
 
 	echo "Docker push: $DOCKER_REGISTRY/$DOCKER_IMAGE"
 	docker push $DOCKER_REGISTRY/$DOCKER_IMAGE

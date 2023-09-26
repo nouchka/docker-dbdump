@@ -1,4 +1,4 @@
-version: "3.4"
+version: "3.9"
 
 services:
   static:
@@ -24,17 +24,29 @@ services:
     build: .
     privileged: true
     environment:
-      - MYSQL_ROOT_PASSWORD=root
+      - DATABASE_BACKUP=1
+      - TZ=Europe/Paris
       - MYSQL_HOST=db
       - MYSQL_DATABASE=test
+      - MYSQL_ROOT_PASSWORD=root
       - MYSQL_USER=test
       - MYSQL_PASSWORD=test
-      - TZ=Europe/Paris
       - DOCKER_REGISTRY=registry:5000
       - DOCKER_IMAGE=dump
       - DOCKER_USERNAME=test
       - DOCKER_PASSWORD=test
+  init:
+    image: nouchka/dbdump
+    build: .
+    privileged: true
+    environment:
       - DATABASE_INIT=1
+      - TZ=Europe/Paris
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=restoredb
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=restore
+      - MYSQL_PASSWORD=restore
     volumes:
       - ./test/docker/daemon.json:/etc/docker/daemon.json:ro
 
