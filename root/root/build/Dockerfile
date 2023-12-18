@@ -1,3 +1,3 @@
 FROM nouchka/dbdump:latest
 
-COPY /data/dump.sql.gz /data/
+COPY /root/build/data/dump.sql.gz /data/
