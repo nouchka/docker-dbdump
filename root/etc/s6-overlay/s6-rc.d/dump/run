@@ -60,6 +60,8 @@ elif [[ "$DATABASE_BACKUP" == "1" && ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE
 	echo "Docker login"
 	echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
 
+	mkdir -p /root/build/data/
+
 	echo "Mysql dump"
 	mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST --single-transaction $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
 
