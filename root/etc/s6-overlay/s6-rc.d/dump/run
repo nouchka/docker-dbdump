@@ -43,7 +43,7 @@ if [[ "$DATABASE_INIT" == "1" && ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE && 
 
 	echo "Download dump"
 	docker run -v /data/:/data/ --rm --entrypoint cp $DOCKER_REGISTRY/$DOCKER_IMAGE /data/dump.sql.gz /data/dump.sql.gz
-		
+
 	echo "Delete image"
 	docker rmi $DOCKER_REGISTRY/$DOCKER_IMAGE
 
@@ -61,7 +61,7 @@ elif [[ "$DATABASE_BACKUP" == "1" && ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE
 	echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
 
 	echo "Mysql dump"
-	mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
+	mysqldump -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST --single-transaction $MYSQL_DATABASE| gzip > /root/build/data/dump.sql.gz
 
 	echo "Docker build"
 	cd /root/build && docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE .
