@@ -1,5 +1,14 @@
 version: "3.9"
 
+x-common-variables: &common-variables
+  DOCKER_USERNAME: test
+  DOCKER_PASSWORD: test
+  DOCKER_REGISTRY: registry:5000
+  DOCKER_IMAGE: dump
+  TZ: Europe/Paris
+  MYSQL_HOST: db
+  MYSQL_ROOT_PASSWORD: root
+
 services:
   static:
     image: rtsp/lighttpd
@@ -10,13 +19,12 @@ services:
   db:
     image: ghcr.io/linuxserver/mariadb:latest
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=test
-      - MYSQL_USER=test
-      - MYSQL_PASSWORD=test
-      - MARIADB_AUTO_UPGRADE=true
-      - TZ=Europe/Paris
-      - REMOTE_SQL=http://static/init.sql
+      <<: *common-variables
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MARIADB_AUTO_UPGRADE: "true"
+      REMOTE_SQL: http://static/init.sql
     volumes:
       - database:/config
   backup:
@@ -24,31 +32,27 @@ services:
     build: .
     privileged: true
     environment:
-      - DATABASE_BACKUP=1
-      - TZ=Europe/Paris
-      - MYSQL_HOST=db
-      - MYSQL_DATABASE=test
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=test
-      - MYSQL_PASSWORD=test
-      - DOCKER_REGISTRY=registry:5000
-      - DOCKER_IMAGE=dump
-      - DOCKER_USERNAME=test
-      - DOCKER_PASSWORD=test
+      <<: *common-variables
+      DATABASE_BACKUP: 1
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    volumes:
+      - ./test/docker/daemon.json:/etc/doc
+      - /var/run/docker.sock:/var/run/docker.sock:ro
   init:
     image: nouchka/dbdump
     build: .
     privileged: true
     environment:
-      - DATABASE_INIT=1
-      - TZ=Europe/Paris
-      - MYSQL_HOST=db
-      - MYSQL_DATABASE=restoredb
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=restore
-      - MYSQL_PASSWORD=restore
+      <<: *common-variables
+      DATABASE_INIT: 1
+      MYSQL_DATABASE: restoredb
+      MYSQL_USER: restore
+      MYSQL_PASSWORD: restore
     volumes:
-      - ./test/docker/daemon.json:/etc/docker/daemon.json:ro
+      - ./test/docker/daemon.json:/etc/doc
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   database:

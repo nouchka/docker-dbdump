@@ -37,7 +37,16 @@ if ! mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST $MYSQL_DATABASE -e 'qu
 	exit 1
 fi
 
-if [[ "$DATABASE_INIT" == "1" && -f "/data/dump.sql.gz" ]] ; then
+if [[ "$DATABASE_INIT" == "1" && ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE && ! -z $DOCKER_USERNAME && ! -z $DOCKER_PASSWORD ]] ; then
+	echo "Docker login"
+	echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
+
+	echo "Download dump"
+	docker run -v /data/:/data/ --rm --entrypoint cp $DOCKER_REGISTRY/$DOCKER_IMAGE /data/dump.sql.gz /data/dump.sql.gz
+		
+	echo "Delete image"
+	docker rmi $DOCKER_REGISTRY/$DOCKER_IMAGE
+
 	echo "Mysql lock"
 	mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -e "ALTER USER $MYSQL_USER@'%' ACCOUNT LOCK;"
 
