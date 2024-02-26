@@ -42,7 +42,7 @@ if [[ "$DATABASE_INIT" == "1" && ! -z $DOCKER_REGISTRY && ! -z $DOCKER_IMAGE && 
 	echo $DOCKER_PASSWORD| /usr/local/bin/docker login $DOCKER_REGISTRY --username $DOCKER_USERNAME --password-stdin
 
 	echo "Download dump"
-	docker run -v /data/:/data/ --rm --entrypoint cp $DOCKER_REGISTRY/$DOCKER_IMAGE /data/dump.sql.gz /data/dump.sql.gz
+	docker run -v /data/:/newdata/ --rm --entrypoint cp $DOCKER_REGISTRY/$DOCKER_IMAGE /data/dump.sql.gz /newdata/dump.sql.gz
 
 	echo "Delete image"
 	docker rmi $DOCKER_REGISTRY/$DOCKER_IMAGE
